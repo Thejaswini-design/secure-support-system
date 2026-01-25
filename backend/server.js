@@ -6,9 +6,12 @@ const userRoutes = require("./routes/userRoutes");
 require("dotenv").config();
 
 const app = express();
+const ticketRoutes = require("./routes/ticketRoutes");
+
 
 // middleware
 app.use(express.json());
+app.use("/api/tickets", ticketRoutes);
 
 // DEBUG: log every request
 app.use((req, res, next) => {
