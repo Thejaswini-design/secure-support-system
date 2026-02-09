@@ -9,11 +9,13 @@ const router = express.Router();
 /* ================= REGISTER ================= */
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    let { name, email, phone, password } = req.body;
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
+
+    email = email.toLowerCase().trim(); // ✅ FIX
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -27,7 +29,6 @@ router.post("/register", async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      // role defaults to "user"
     });
 
     res.status(201).json({ message: "User registered successfully" });
@@ -38,12 +39,16 @@ router.post("/register", async (req, res) => {
 
 /* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
+  console.log("🔥 LOGIN BODY:", req.body); // ✅ DEBUG
+
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password required" });
     }
+
+    email = email.toLowerCase().trim(); // ✅ FIX (THIS IS THE KEY)
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -67,73 +72,6 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
-  }
-});
-
-/* ================= GET LOGGED-IN USER ================= */
-router.get("/me", protect, async (req, res) => {
-  res.status(200).json(req.user);
-});
-
-/* ================= GET ALL USERS ================= */
-router.get("/", protect, async (req, res) => {
-  try {
-    const users = await User.find().select("-password");
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-/* ================= GET USER BY ID ================= */
-router.get("/:id", protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Invalid user ID" });
-  }
-});
-
-/* ================= UPDATE USER ================= */
-router.put("/:id", protect, async (req, res) => {
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    ).select("-password");
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Invalid user ID or data" });
-  }
-});
-
-/* ================= DELETE USER ================= */
-router.delete("/:id", protect, async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Invalid user ID" });
   }
 });
 

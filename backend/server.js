@@ -2,16 +2,17 @@ console.log("🔥 BACKEND SERVER.JS FILE IS RUNNING");
 
 const express = require("express");
 const mongoose = require("mongoose");
-const userRoutes = require("./routes/userRoutes");
+const cors = require("cors"); // ✅ ADD THIS
 require("dotenv").config();
 
-const app = express();
+const userRoutes = require("./routes/userRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 
+const app = express();
 
-// middleware
+// ✅ MIDDLEWARE (ORDER MATTERS)
+app.use(cors()); // ✅ MUST BE BEFORE ROUTES
 app.use(express.json());
-app.use("/api/tickets", ticketRoutes);
 
 // DEBUG: log every request
 app.use((req, res, next) => {
@@ -19,14 +20,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB (Atlas)
+// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error(err));
 
-// mount routes
+// routes
 app.use("/api/users", userRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 // root test
 app.get("/", (req, res) => {
